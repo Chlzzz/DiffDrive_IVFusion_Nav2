@@ -1,0 +1,29 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 50 # Hz
+    use_sim_time: true
+
+    diff_controller:
+      type: diff_drive_controller/DiffDriveController
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+
+diff_controller:
+  ros__parameters:
+    update_rate: 50 # Hz
+    base_frame_id: base_footprint
+    
+    left_wheel_names: ["base_back_l_wheel_joint"]
+    right_wheel_names: ["base_back_r_wheel_joint"]
+    wheel_separation: 0.4
+    wheel_radius: 0.1
+    
+    #velocity_rolling_window_size: 10
+    #position_feedback: false
+   
+    #open_loop: false
+
+    #odom_frame_id: "odom"
+    #enable_odom_tf: true

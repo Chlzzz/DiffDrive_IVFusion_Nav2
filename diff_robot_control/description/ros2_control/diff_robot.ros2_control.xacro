@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- diff driver -->
+
+     <ros2_control name="DiffRobot" type="system">
+        <hardware>
+           <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+        </hardware>
+    
+        <joint name="base_back_l_wheel_joint">
+           <command_interface name="velocity"/>
+           <state_interface name="position"/>
+           <state_interface name="velocity"/>
+        </joint>
+        <joint name="base_back_r_wheel_joint">
+           <command_interface name="velocity"/>
+           <state_interface name="position"/>
+           <state_interface name="velocity"/>
+        </joint>
+        
+     </ros2_control>
+    
+      <gazebo>
+        <!-- Joint state publisher -->
+        <plugin name="gz_ros2_control::GazeboSimROS2ControlPlugin" filename="gz_ros2_control-system" >
+          <parameters>$(find diff_robot_control)/config/diff_drive_controller.yaml</parameters>
+          <ros> 
+            <namespace></namespace>
+            <remapping>diff_controller/cmd_vel:=cmd_vel</remapping> 
+            <remapping>diff_controller/odom:=odom</remapping>
+          </ros> 
+        </plugin>
+      </gazebo>
+
+
+</robot>

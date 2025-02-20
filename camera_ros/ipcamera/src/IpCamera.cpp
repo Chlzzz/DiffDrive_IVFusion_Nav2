@@ -20,7 +20,10 @@ IpCamera::IpCamera(const std::string& node_name, const rclcpp::NodeOptions& opti
     this -> pub_ = image_transport::create_camera_publisher(
             this, "~/image_raw", qos_.get_rmw_qos_profile());
     
-    this -> execute();
+    std::unique_lock<std::shared_mutex> thread_lock(worker_thread_mutex);
+    worker_thread = std::thread([this]() {
+        this -> execute();
+    });
 }
 
 IpCamera::IpCamera(const rclcpp::NodeOptions& options)

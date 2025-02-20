@@ -1,6 +1,8 @@
 #ifndef _IPCAMERA_H_
 #define _IPCAMERA_H_
 
+#include <thread>
+
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 #include <rclcpp/rclcpp.hpp>
@@ -25,6 +27,9 @@ public:
     void execute();
 
 private:
+    std::thread worker_thread;
+    std::shared_mutex worker_thread_mutex;
+    
     std::shared_ptr<camera_info_manager::CameraInfoManager> cinfo_manager_;
     std::string camera_calibration_file_param_;
 
