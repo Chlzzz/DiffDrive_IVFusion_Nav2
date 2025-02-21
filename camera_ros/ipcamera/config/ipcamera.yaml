@@ -4,3 +4,5 @@ ipcamera:
     image_topic: "image_raw"
     image_width: 384
     image_height: 288
+    is_save: false
+    save_path: "./img_save/"

@@ -2,6 +2,8 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <filesystem>
+
 #include <rclcpp/parameter.hpp>
 #include "ipcamera/IpCamera.hpp"
 
@@ -9,7 +11,8 @@ namespace camera {
 
 IpCamera::IpCamera(const std::string& node_name, const rclcpp::NodeOptions& options)
     : Node(node_name, options), 
-      qos_(rclcpp::QoS(rclcpp::KeepLast(1)).best_effort()) {
+      qos_(rclcpp::QoS(rclcpp::KeepLast(1)).best_effort()),
+      is_save_img_(false) {
     
     RCLCPP_INFO(this -> get_logger(), "namespace: %s", this -> get_namespace());
     RCLCPP_INFO(this -> get_logger(), "node_name: %s", this -> get_name());
@@ -27,7 +30,9 @@ IpCamera::IpCamera(const std::string& node_name, const rclcpp::NodeOptions& opti
 }
 
 IpCamera::IpCamera(const rclcpp::NodeOptions& options)
-    : IpCamera::IpCamera("ipcamera", options) {}
+    : IpCamera::IpCamera("ipcamera", options) {
+
+}
 
 void IpCamera::configure() {
     rclcpp::Logger node_logger = this -> get_logger();
@@ -37,13 +42,25 @@ void IpCamera::configure() {
             camera_calibration_file_param_);
     this -> get_parameter<int>("image_width", width_);
     this -> get_parameter<int>("image_height", height_);
+    this -> get_parameter<bool>("is_save", is_save_img_);
+    this -> get_parameter<std::string>("save_path", img_save_path_);
 
     RCLCPP_INFO(node_logger, "rtsp_uri: %s", source_.c_str());
     RCLCPP_INFO(node_logger, "camera_calibration_file_param: %s", 
             camera_calibration_file_param_.c_str());
     RCLCPP_INFO(node_logger, "image_width: %d", width_);
     RCLCPP_INFO(node_logger, "image_height: %d", height_);
+    RCLCPP_INFO(node_logger, "is_save: %d", is_save_img_);
+    RCLCPP_INFO(node_logger, "save_path: %s", img_save_path_);
 
+    if(this -> is_save_img_) {
+        if(!std::filesystem::exists(img_save_path_)) {
+            if(std::filesystem::create_directory(img_save_path_))
+                RCLCPP_INFO(this -> get_logger(), "create directory: %s", img_save_path_);
+            else 
+                RCLCPP_INFO(this -> get_logger(), "create directory error"); 
+        }
+    }
     this -> cap_.open(source_);
     if(!this -> cap_.isOpened()) {
         RCLCPP_ERROR(node_logger, "Could not open video stream");
@@ -90,6 +107,18 @@ void IpCamera::initialize_parameters() {
     image_width_descriptor.type = 
         rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
     this -> declare_parameter("image_width", 480, image_heigth_descriptor);
+
+    rcl_interfaces::msg::ParameterDescriptor is_save_descriptor;
+    is_save_descriptor.name = "false";
+    is_save_descriptor.type = 
+        rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
+    this -> declare_parameter("is_save", false, is_save_descriptor);
+
+    rcl_interfaces::msg::ParameterDescriptor save_path_descriptor;
+    save_path_descriptor.name = "save_path";
+    save_path_descriptor.type = 
+        rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    this -> declare_parameter("save_path", "", save_path_descriptor);
 }
 
 void IpCamera::execute() {
@@ -100,13 +129,20 @@ void IpCamera::execute() {
             
     cv::Mat frame;
     size_t frame_id = 0;
+    std::string filename;
+    size_t img_id = 0;
 
     while(rclcpp::ok()) {
         auto msg = std::make_unique<sensor_msgs::msg::Image>();
         msg -> is_bigendian = false;
 
         this -> cap_ >> frame;
+
         if(!frame.empty()) {
+            if(is_save_img_) {
+                filename = img_save_path_ + std::to_string(img_id++) + ".jpg";
+                cv::imwrite(filename, frame);
+            }
             convert_frame_to_message(frame, frame_id, *msg, *camera_info_msg);
             this -> pub_.publish(std::move(msg), camera_info_msg);
             ++frame_id;
@@ -150,6 +186,17 @@ void IpCamera::convert_frame_to_message(
     msg.header.stamp = timestamp;
     camera_info_msg.header.frame_id = std::to_string(frame_id);
     camera_info_msg.header.stamp = timestamp;
+}
+
+void IpCamera::set_save_img(std::string path) {
+    if(!std::filesystem::exists(path)) {
+        if(std::filesystem::create_directory(path))
+            RCLCPP_INFO(this -> get_logger(), "create directory: %s", path);
+        else 
+            RCLCPP_INFO(this -> get_logger(), "create directory error"); 
+    }
+    is_save_img_ = !is_save_img_;
+    img_save_path_ = path;
 }
 
 } // namespace camera

@@ -9,7 +9,6 @@ int main(int argc, char* argv[]) {
     rclcpp::NodeOptions options;
 
     auto ipcamera_node = std::make_shared<camera::IpCamera>("ipcamera", options);
-
     exec.add_node(ipcamera_node);
     exec.spin();
     rclcpp::shutdown();
