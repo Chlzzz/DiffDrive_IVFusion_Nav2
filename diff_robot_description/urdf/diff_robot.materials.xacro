@@ -2,13 +2,13 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <!--__________Material__________-->
-    <material name="yellow">
+  <!-- <material name="yellow">
         <color rgba="0.8 0.3 0.1 0.5" />
-    </material>
+    </material> -->
 
-    <material name="black">
+    <!-- <material name="black">
         <color rgba="0.0 0.0 0.0 1.0" />
-    </material>
+    </material> -->
 
     <material name="blue">
         <color rgba="0 0 0.5 1" />
