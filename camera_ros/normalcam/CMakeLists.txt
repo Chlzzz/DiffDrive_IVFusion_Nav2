@@ -23,7 +23,9 @@ include_directories(include)
 set(node_plugins "")
 
 add_library(NormalCam SHARED
+  include/normalcam/NormalCam.hpp
   src/NormalCam.cpp)
+
 target_compile_definitions(NormalCam
   PRIVATE "COMPOSITION_BUILDING_DLL") 
   
@@ -42,13 +44,13 @@ ament_target_dependencies(NormalCam
 rclcpp_components_register_nodes(NormalCam "camera::NormalCam")
 set(node_plugins "${node_plugins}camera::NormalCam;$<TARGET_FILE:NormalCam>\n")
 
-add_executable(${PROJECT_NAME}
-  src/CameraNode.cpp)
+add_executable(mycam
+  src/main.cpp)
   
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(mycam
   NormalCam)
 
-ament_target_dependencies(${PROJECT_NAME}
+ament_target_dependencies(mycam
   "rclcpp")
 
 install(TARGETS
@@ -58,7 +60,7 @@ install(TARGETS
   RUNTIME DESTINATION bin)
 
 install(TARGETS
-  ${PROJECT_NAME}
+  mycam
   RUNTIME DESTINATION lib/${PROJECT_NAME})
 
 
@@ -74,6 +76,3 @@ install(TARGETS
 # )
 
 ament_package()
-
-
-
